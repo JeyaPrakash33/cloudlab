@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en" ng-app="myapp">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ordering system</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+</head>
+<body ng-controller="myctrl">
+    <h1>order details</h1>
+    <p>name:</p>
+    <input ng-model="name">
+    <p>address:</p>
+    <input ng-model="address">
+    <button ng-click="submitorder()">placeorder</button><br>
+    <p class="order" ng-repeat="x in orders"><strong>{{x.name|uppercase}}</strong><br>address:{{x.address}} <button ng-click="editorder(x)">edit</button><button ng-click="deleteorder(x._id)">delete</button></p>
+
+    <script>
+        const myapp = angular.module('myapp',[])
+
+        myapp.service('orderservice',function($http){
+            const api="http://localhost:5000/api/orders";
+            this.getorder= () => $http.get(api);
+            this.createorder= (order) => $http.post(api,order);
+            this.updateorder= (id,order) => $http.put(`${api}/${id}`,order);
+            this.deleteorder= (id) => $http.delete(`${api}/${id}`);
+        });
+
+        myapp.factory('utilsfactory',function(){
+            return{
+                validateorder:function(order){
+                    return order.name && order.address;
+                }
+            }
+        });
+
+        myapp.controller('myctrl',function($scope,utilsfactory,orderservice){
+            $scope.orders=[];
+            $scope.editingid=null;
+
+            $scope.loadorders = function(){
+                orderservice.getorder().then(res=> $scope.orders=res.data)
+            };
+
+            $scope.submitorder=function(){
+                const neworder={name:$scope.name,address:$scope.address};
+                if(!utilsfactory.validateorder(neworder)) return alert("fill all details!");
+
+                if($scope.editingid){
+                    orderservice.updateorder($scope.editingid,neworder).then(()=>{$scope.loadorders();$scope.resetform()});
+                }
+                else{
+                    orderservice.createorder(neworder).then(()=>{$scope.loadorders();$scope.resetform()});
+                }
+            };
+
+            $scope.editorder=function(order){
+                $scope.editingid=order._id;
+                $scope.name=order.name;
+                $scope.address=order.address;
+            };
+
+            $scope.deleteorder=function(id){
+                orderservice.deleteorder(id).then(()=>{$scope.loadorders()});
+            };
+
+            $scope.resetform=function(){
+                $scope.editingid=null;
+                $scope.name=$scope.address="";
+            }
+            $scope.loadorders();
+
+        });
+    </script>
+
+
+    
+</body>
+</html>
