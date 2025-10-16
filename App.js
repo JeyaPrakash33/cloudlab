@@ -75,6 +75,11 @@ export default App;
 //npx create-react-app myapp
 //cd myapp
 //npm install firebase
+//after copying firebase.js
+//import {getAuth} from "firebase/auth"
+//import {getFirestore} from "firebase/firestore"
+//export const auth=getAuth(app)
+//export const db=getFirestore(app)
 //firebase login
 //npm install -g firebase-tools
 //firebase init
