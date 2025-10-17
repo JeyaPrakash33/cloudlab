@@ -82,6 +82,7 @@ export default App;
 //export const db=getFirestore(app)
 //firebase login
 //npm install -g firebase-tools
+//npm start
 //firebase init
 //npm run build
 //firebase deploy
