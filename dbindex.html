@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dropbox Upload & Download</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #f9fafb;
+    }
+    h2 {
+      color: #1e40af;
+    }
+    input, button {
+      margin: 5px 0;
+      padding: 8px;
+      font-size: 14px;
+    }
+    button {
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    #status {
+      margin-top: 15px;
+      font-weight: bold;
+      color: red;
+    }
+  </style>
+</head>
+<body>
+  <h2>Dropbox File Upload & Download</h2>
+
+  <!-- Upload Section -->
+  <h3>Upload File</h3>
+  <input type="file" id="fileInput" />
+  <button onclick="uploadFile()">Upload</button>
+
+  <!-- Download Section -->
+  <h3>Download File</h3>
+  <input type="text" id="filePath" placeholder="/filename.txt" />
+  <button onclick="downloadFile()">Download</button>
+
+  <p id="status"></p>
+
+  <!-- Dropbox SDK -->
+  <script src="https://unpkg.com/dropbox/dist/Dropbox-sdk.min.js"></script>
+  <script>
+    // 🔑 Replace with your short-lived Dropbox access token
+    const ACCESS_TOKEN = "YOUR_DROPBOX_ACCESS_TOKEN_HERE";
+
+    const dbx = new Dropbox.Dropbox({ accessToken: ACCESS_TOKEN, fetch: fetch });
+    const status = document.getElementById("status");
+
+    // ✅ Upload Function
+    async function uploadFile() {
+      const fileInput = document.getElementById("fileInput");
+      if (!fileInput.files.length) {
+        status.style.color = "red";
+        status.innerText = "Please choose a file first.";
+        return;
+      }
+
+      const file = fileInput.files[0];
+      status.style.color = "black";
+      status.innerText = "Uploading...";
+
+      try {
+        const response = await dbx.filesUpload({
+          path: "/" + file.name,
+          contents: file,
+          mode: "overwrite"
+        });
+
+        status.style.color = "green";
+        status.innerText = "✅ Uploaded: " + response.result.name;
+      } catch (error) {
+        console.error(error);
+        status.style.color = "red";
+        status.innerText = "❌ Upload failed: " + (error.message || error.error);
+      }
+    }
+
+    // ✅ Download Function
+    async function downloadFile() {
+      const filePath = document.getElementById("filePath").value.trim();
+      if (!filePath) {
+        status.style.color = "red";
+        status.innerText = "Enter the file path (e.g., /myfile.txt)";
+        return;
+      }
+
+      status.style.color = "black";
+      status.innerText = "Downloading...";
+
+      try {
+        const response = await dbx.filesDownload({ path: filePath });
+        const blob = response.result.fileBlob;
+        const url = window.URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = response.result.name;
+        a.click();
+
+        window.URL.revokeObjectURL(url);
+        status.style.color = "green";
+        status.innerText = "✅ Downloaded: " + response.result.name;
+      } catch (error) {
+        console.error(error);
+        status.style.color = "red";
+        status.innerText = "❌ Download failed: " + (error.message || error.error);
+      }
+    }
+  </script>
+</body>
+</html>
